@@ -1,43 +1,21 @@
 class Move
+  attr_reader :value
+
   VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
+  WINNING_MOVES = {
+    'rock' => ['scissors', 'lizard'],
+    'paper' => ['rock', 'spock'],
+    'scissors' => ['paper', 'lizard'],
+    'lizard' => ['spock', 'paper'],
+    'spock' => ['scissors', 'rock']
+  }
+
   def initialize(value)
     @value = value
   end
 
-  def scissors?
-    @value == 'scissors'
-  end
-
-  def rock?
-    @value == 'rock'
-  end
-
-  def paper?
-    @value == 'paper'
-  end
-
-  def lizard?
-    @value == 'lizard'
-  end
-
-  def spock?
-    @value == 'spock'
-  end
-
-  def >(other_move)
-    (rock? && (other_move.scissors? || other_move.lizard?)) ||
-      (paper? && (other_move.rock? || other_move.spock?)) ||
-      (scissors? && (other_move.paper? || other_move.lizard?)) ||
-      (lizard? && (other_move.spock? || other_move.paper?)) ||
-      (spock? && (other_move.rock? || other_move.scissors?))
-  end
-
-  def <(other_move)
-    (rock? && (other_move.paper? || other_move.spock?)) ||
-      (paper? && (other_move.scissors? || other_move.lizard?)) ||
-      (scissors? && (other_move.rock? || other_move.spock?)) ||
-      (lizard? && (other_move.rock? || other_move.scissors?)) ||
-      (spock? && (other_move.paper? || other_move.lizard?))
+  def win?(other_move)
+    WINNING_MOVES[@value].include?(other_move.value)
   end
 
   def to_s
@@ -112,9 +90,9 @@ class RPSGame
   end
 
   def display_round_winner
-    if human.move > computer.move
+    if human.move.win?(computer.move)
       puts "#{human.name} won!"
-    elsif human.move < computer.move
+    elsif computer.move.win?(human.move)
       puts "#{computer.name} won!"
     else
       puts "It's a tie!"
@@ -122,9 +100,9 @@ class RPSGame
   end
 
   def update_score
-    if human.move > computer.move
+    if human.move.win?(computer.move)
       human.score += 1
-    elsif human.move < computer.move
+    elsif computer.move.win?(human.move)
       computer.score += 1
     end
   end
