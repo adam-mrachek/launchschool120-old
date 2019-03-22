@@ -1,54 +1,81 @@
-class Rock
-
-end
-
-class Paper
-
-end
-
-class Scissors
-
-end
-
-class Lizard
-
-end
-
-class Spock
-
-end
-
 class Move
   attr_reader :value
 
-  VALUES = [Rock, Paper, Scissors, Lizard, Spock]
-  WINNING_MOVES = {
-    'rock' => ['scissors', 'lizard'],
-    'paper' => ['rock', 'spock'],
-    'scissors' => ['paper', 'lizard'],
-    'lizard' => ['spock', 'paper'],
-    'spock' => ['scissors', 'rock']
-  }
+  VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock', 'r', 'p', 'sc',
+            'l', 'sp']
 
   def initialize(value)
     @value = value
   end
+end
 
+class Rock < Move
   def win?(other_move)
-    WINNING_MOVES[@value].include?(other_move.value)
+    other_move.class == Scissors || other_move.class == Lizard
   end
 
   def to_s
-    @value
+    'Rock'
+  end
+end
+
+class Paper < Move
+  def win?(other_move)
+    other_move.class == Rock || other_move.class == Spock
+  end
+
+  def to_s
+    'Paper'
+  end
+end
+
+class Scissors < Move
+  def win?(other_move)
+    other_move.class == Paper || other_move.class == Lizard
+  end
+
+  def to_s
+    'Scissors'
+  end
+end
+
+class Lizard < Move
+  def win?(other_move)
+    other_move.class == Spock || other_move.class == Paper
+  end
+
+  def to_s
+    'Lizard'
+  end
+end
+
+class Spock < Move
+  def win?(other_move)
+    other_move.class == Scissors || other_move.class == Rock
+  end
+
+  def to_s
+    'Spock'
   end
 end
 
 class Player
-  attr_accessor :move, :name, :score
+  attr_accessor :move, :name, :score, :move_history
 
   def initialize
     set_name
     @score = 0
+    @move_history = []
+  end
+
+  def assign_move(choice)
+    case choice
+    when 'rock', 'r' then Rock.new('rock')
+    when 'paper', 'p' then Paper.new('paper')
+    when 'scissors', 'sc' then Scissors.new('scissors')
+    when 'lizard', 'l' then Lizard.new('lizard')
+    when 'spock', 'sp' then Spock.new('spock')
+    end
   end
 end
 
@@ -68,13 +95,14 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      puts "Please choose rock, paper, scissors, lizard, or spock."
-      choice = gets.chomp
+      puts "Please choose (r)ock, (p)aper, (sc)issors, (l)izard, or (sp)ock."
+      choice = gets.chomp.downcase
       break if Move::VALUES.include?(choice)
 
       puts "Sorry, invalid choice"
     end
-    self.move = Move.new(choice)
+    self.move = assign_move(choice)
+    self.move_history << self.move
   end
 end
 
@@ -84,7 +112,8 @@ class Computer < Player
   end
 
   def choose
-    self.move = Move.new(Move::VALUES.sample)
+    self.move = assign_move(Move::VALUES.sample)
+    self.move_history << self.move
   end
 end
 
@@ -161,18 +190,24 @@ class RPSGame
     computer.score = 0
   end
 
+  def game_ops
+    human.choose
+    computer.choose
+    p human.move_history
+    p computer.move_history
+    display_moves
+    display_round_winner
+    update_score
+    display_score
+  end
+
   def play
     display_welcome_message
     loop do
       reset_score
 
       loop do
-        human.choose
-        computer.choose
-        display_moves
-        display_round_winner
-        update_score
-        display_score
+        game_ops
         break if game_winner?
       end
       display_game_winner
