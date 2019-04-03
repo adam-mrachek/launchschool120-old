@@ -128,6 +128,8 @@ class RPSGame
 
   def display_welcome_message
     puts "Hi, #{human.name}. Welcome to Rock, Paper, Scissors, Lizard, Spock!"
+    puts ""
+    puts "The first player to win 10 rounds wins the game!"
   end
 
   def display_goodbye_message
@@ -143,9 +145,11 @@ class RPSGame
 
   def display_round_winner
     if human.move.win?(computer.move)
-      puts "#{human.name} won!"
+      puts ""
+      puts "*** #{human.name} won! ***"
     elsif computer.move.win?(human.move)
-      puts "#{computer.name} won!"
+      puts ""
+      puts "*** #{computer.name} won! ***"
     else
       puts "It's a tie!"
     end
@@ -164,6 +168,7 @@ class RPSGame
     puts "SCORE:"
     puts "#{human.name}: #{human.score}"
     puts "#{computer.name}: #{computer.score}"
+    puts ""
   end
 
   def game_winner?
@@ -198,24 +203,27 @@ class RPSGame
   def game_ops
     human.choose
     computer.choose
-    sleep 0.5
+    sleep 0.75
     display_moves
-    sleep 0.5
+    sleep 0.75
     display_round_winner
     update_score
-    sleep 0.5
     display_score
   end
 
   def play
     system('clear') || system('cls')
     display_welcome_message
+    sleep 1.0
     loop do
       reset_score
 
       loop do
         game_ops
         break if game_winner?
+        puts "Press a button to start next round."
+        gets
+        system('clear') || system('cls')
       end
       display_game_winner
       break unless play_again?
