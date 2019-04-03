@@ -95,6 +95,7 @@ class Human < Player
   def choose
     choice = nil
     loop do
+      puts ""
       puts "Please choose (r)ock, (p)aper, (sc)issors, (l)izard, or (sp)ock."
       choice = gets.chomp.downcase
       break if Move::VALUES.include?(choice)
@@ -102,7 +103,7 @@ class Human < Player
       puts "Sorry, invalid choice"
     end
     self.move = assign_move(choice)
-    self.move_history << self.move
+    move_history << move
   end
 end
 
@@ -113,7 +114,7 @@ class Computer < Player
 
   def choose
     self.move = assign_move(Move::VALUES.sample)
-    self.move_history << self.move
+    move_history << move
   end
 end
 
@@ -134,8 +135,10 @@ class RPSGame
   end
 
   def display_moves
+    puts "----------------------------------"
     puts "#{human.name} chose #{human.move}."
     puts "#{computer.name} chose #{computer.move}."
+    puts "----------------------------------"
   end
 
   def display_round_winner
@@ -157,6 +160,8 @@ class RPSGame
   end
 
   def display_score
+    puts ""
+    puts "SCORE:"
     puts "#{human.name}: #{human.score}"
     puts "#{computer.name}: #{computer.score}"
   end
@@ -193,15 +198,17 @@ class RPSGame
   def game_ops
     human.choose
     computer.choose
-    p human.move_history
-    p computer.move_history
+    sleep 0.5
     display_moves
+    sleep 0.5
     display_round_winner
     update_score
+    sleep 0.5
     display_score
   end
 
   def play
+    system('clear') || system('cls')
     display_welcome_message
     loop do
       reset_score
