@@ -121,6 +121,8 @@ end
 class RPSGame
   attr_accessor :human, :computer
 
+  WINNING_SCORE = 10
+
   def initialize
     @human = Human.new
     @computer = Computer.new
@@ -129,7 +131,7 @@ class RPSGame
   def display_welcome_message
     puts "Hi, #{human.name}. Welcome to Rock, Paper, Scissors, Lizard, Spock!"
     puts ""
-    puts "The first player to win 10 rounds wins the game!"
+    puts "The first player to win #{WINNING_SCORE} rounds wins the game!"
   end
 
   def display_goodbye_message
@@ -172,13 +174,13 @@ class RPSGame
   end
 
   def game_winner?
-    human.score == 10 || computer.score == 10
+    human.score == WINNING_SCORE || computer.score == WINNING_SCORE
   end
 
   def display_game_winner
-    if human.score == 10
+    if human.score == WINNING_SCORE
       puts "#{human.name} wins the game!"
-    elsif computer.score == 10
+    elsif computer.score == WINNING_SCORE
       puts "#{computer.name} wins the game!"
     end
   end
@@ -203,7 +205,7 @@ class RPSGame
   def game_ops
     human.choose
     computer.choose
-    sleep 0.75
+    sleep 0.5
     display_moves
     sleep 0.75
     display_round_winner
@@ -221,7 +223,7 @@ class RPSGame
       loop do
         game_ops
         break if game_winner?
-        puts "Press a button to start next round."
+        puts "Press enter to start next round."
         gets
         system('clear') || system('cls')
       end
