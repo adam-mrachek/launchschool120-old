@@ -1,3 +1,50 @@
+module Displayable
+  WINNING_SCORE = 10
+
+  def display_welcome_message
+    puts "Hi, #{human.name}. Welcome to Rock, Paper, Scissors, Lizard, Spock!"
+    puts ""
+    puts "The first player to win #{WINNING_SCORE} rounds wins the game!"
+  end
+
+  def display_goodbye_message
+    puts "Thanks for playing Rock, Paper, Scissors, Lizard, Spock. Goodbye!"
+  end
+
+  def display_moves
+    puts "----------------------------------"
+    puts "#{human.name} chose #{human.move}."
+    puts "#{computer.name} chose #{computer.move}."
+    puts "----------------------------------"
+  end
+
+  def display_round_winner
+    if human.move.win?(computer.move)
+      puts "*** #{human.name} won! ***"
+    elsif computer.move.win?(human.move)
+      puts "*** #{computer.name} won! ***"
+    else
+      puts "It's a tie!"
+    end
+  end
+
+  def display_score
+    puts ""
+    puts "SCORE:"
+    puts "#{human.name}: #{human.score}"
+    puts "#{computer.name}: #{computer.score}"
+    puts ""
+  end
+
+  def display_game_winner
+    if human.score == WINNING_SCORE
+      puts "#{human.name} wins the game!"
+    elsif computer.score == WINNING_SCORE
+      puts "#{computer.name} wins the game!"
+    end
+  end
+end
+
 class Move
   attr_reader :value
 
@@ -119,42 +166,12 @@ class Computer < Player
 end
 
 class RPSGame
+  include Displayable
   attr_accessor :human, :computer
-
-  WINNING_SCORE = 10
 
   def initialize
     @human = Human.new
     @computer = Computer.new
-  end
-
-  def display_welcome_message
-    puts "Hi, #{human.name}. Welcome to Rock, Paper, Scissors, Lizard, Spock!"
-    puts ""
-    puts "The first player to win #{WINNING_SCORE} rounds wins the game!"
-  end
-
-  def display_goodbye_message
-    puts "Thanks for playing Rock, Paper, Scissors, Lizard, Spock. Goodbye!"
-  end
-
-  def display_moves
-    puts "----------------------------------"
-    puts "#{human.name} chose #{human.move}."
-    puts "#{computer.name} chose #{computer.move}."
-    puts "----------------------------------"
-  end
-
-  def display_round_winner
-    if human.move.win?(computer.move)
-      puts ""
-      puts "*** #{human.name} won! ***"
-    elsif computer.move.win?(human.move)
-      puts ""
-      puts "*** #{computer.name} won! ***"
-    else
-      puts "It's a tie!"
-    end
   end
 
   def update_score
@@ -165,24 +182,8 @@ class RPSGame
     end
   end
 
-  def display_score
-    puts ""
-    puts "SCORE:"
-    puts "#{human.name}: #{human.score}"
-    puts "#{computer.name}: #{computer.score}"
-    puts ""
-  end
-
   def game_winner?
     human.score == WINNING_SCORE || computer.score == WINNING_SCORE
-  end
-
-  def display_game_winner
-    if human.score == WINNING_SCORE
-      puts "#{human.name} wins the game!"
-    elsif computer.score == WINNING_SCORE
-      puts "#{computer.name} wins the game!"
-    end
   end
 
   def play_again?
@@ -214,7 +215,6 @@ class RPSGame
   end
 
   def play
-    system('clear') || system('cls')
     display_welcome_message
     sleep 1.0
     loop do
@@ -223,6 +223,7 @@ class RPSGame
       loop do
         game_ops
         break if game_winner?
+
         puts "Press enter to start next round."
         gets
         system('clear') || system('cls')
