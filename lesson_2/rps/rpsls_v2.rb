@@ -132,9 +132,9 @@ class Human < Player
     loop do
       puts "What's your name?"
       n = gets.chomp
-      break unless n.empty?
+      break unless n.empty? || n =~ /[^A-Za-z0-9]/
 
-      puts "Sorry, you must enter a value."
+      puts "Your name must include only letters and numbers (no spaces)."
     end
     self.name = n
   end
