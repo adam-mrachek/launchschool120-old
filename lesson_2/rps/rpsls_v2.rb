@@ -174,6 +174,28 @@ class RPSGame
     @computer = Computer.new
   end
 
+  def play
+    display_welcome_message
+    sleep 1.0
+    loop do
+      reset_score
+
+      loop do
+        game_ops
+        break if game_winner?
+
+        puts "Press enter to start next round."
+        gets
+        system('clear') || system('cls')
+      end
+      display_game_winner
+      break unless play_again?
+    end
+    display_goodbye_message
+  end
+
+  private
+
   def update_score
     if human.move.win?(computer.move)
       human.score += 1
@@ -212,26 +234,6 @@ class RPSGame
     display_round_winner
     update_score
     display_score
-  end
-
-  def play
-    display_welcome_message
-    sleep 1.0
-    loop do
-      reset_score
-
-      loop do
-        game_ops
-        break if game_winner?
-
-        puts "Press enter to start next round."
-        gets
-        system('clear') || system('cls')
-      end
-      display_game_winner
-      break unless play_again?
-    end
-    display_goodbye_message
   end
 end
 
