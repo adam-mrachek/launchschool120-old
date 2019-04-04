@@ -19,9 +19,9 @@ module Displayable
   end
 
   def display_round_winner
-    if human.move.win?(computer.move)
+    if human.move > computer.move
       puts "*** #{human.name} won! ***"
-    elsif computer.move.win?(human.move)
+    elsif computer.move > human.move
       puts "*** #{computer.name} won! ***"
     else
       puts "It's a tie!"
@@ -57,7 +57,7 @@ class Move
 end
 
 class Rock < Move
-  def win?(other_move)
+  def >(other_move)
     other_move.class == Scissors || other_move.class == Lizard
   end
 
@@ -67,7 +67,7 @@ class Rock < Move
 end
 
 class Paper < Move
-  def win?(other_move)
+  def >(other_move)
     other_move.class == Rock || other_move.class == Spock
   end
 
@@ -77,7 +77,7 @@ class Paper < Move
 end
 
 class Scissors < Move
-  def win?(other_move)
+  def >(other_move)
     other_move.class == Paper || other_move.class == Lizard
   end
 
@@ -87,7 +87,7 @@ class Scissors < Move
 end
 
 class Lizard < Move
-  def win?(other_move)
+  def >(other_move)
     other_move.class == Spock || other_move.class == Paper
   end
 
@@ -97,7 +97,7 @@ class Lizard < Move
 end
 
 class Spock < Move
-  def win?(other_move)
+  def >(other_move)
     other_move.class == Scissors || other_move.class == Rock
   end
 
@@ -175,6 +175,7 @@ class RPSGame
   end
 
   def play
+    system('clear') || system('cls')
     display_welcome_message
     sleep 1.0
     loop do
@@ -184,9 +185,7 @@ class RPSGame
         game_ops
         break if game_winner?
 
-        puts "Press enter to start next round."
-        gets
-        system('clear') || system('cls')
+        start_next_round
       end
       display_game_winner
       break unless play_again?
@@ -197,9 +196,9 @@ class RPSGame
   private
 
   def update_score
-    if human.move.win?(computer.move)
+    if human.move > computer.move
       human.score += 1
-    elsif computer.move.win?(human.move)
+    elsif computer.move > human.move
       computer.score += 1
     end
   end
@@ -234,6 +233,12 @@ class RPSGame
     display_round_winner
     update_score
     display_score
+  end
+
+  def start_next_round
+    puts "Press enter to start next round."
+    gets
+    system('clear') || system('cls')
   end
 end
 
