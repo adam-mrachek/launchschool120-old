@@ -1,5 +1,3 @@
-require 'pry'
-
 class Board
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # columns
@@ -40,12 +38,6 @@ class Board
     !!winning_marker
   end
 
-  def three_identical_markers?(squares)
-    markers = squares.select(&:marked?).collect(&:marker)
-    return false if markers.size != 3
-    markers.min == markers.max
-  end
-
   # return winning marker or return nil
   def winning_marker
     WINNING_LINES.each do |line|
@@ -59,6 +51,14 @@ class Board
 
   def reset
     (1..9).each { |key| @squares[key] = Square.new }
+  end
+
+  private
+
+  def three_identical_markers?(squares)
+    markers = squares.select(&:marked?).collect(&:marker)
+    return false if markers.size != 3
+    markers.min == markers.max
   end
 end
 
@@ -108,6 +108,29 @@ class TTTGame
     @computer = Player.new(COMPUTER_MARKER)
     @current_marker = FIRST_TO_MOVE
   end
+
+  def play
+    clear
+    display_welcome_message
+
+    loop do
+      display_board
+
+      loop do
+        current_player_moves
+        break if board.someone_won? || board.full?
+        clear_screen_and_display_board if human_turn?
+      end
+      display_result
+      break unless play_again?
+      reset
+      display_play_again_message
+    end
+
+    display_goodbye_message
+  end
+
+  private
 
   def clear
     system('clear') || system('cls')
@@ -199,27 +222,6 @@ class TTTGame
   def display_play_again_message
     puts "Let's play again!"
     puts ""
-  end
-
-  def play
-    clear
-    display_welcome_message
-
-    loop do
-      display_board
-
-      loop do
-        current_player_moves
-        break if board.someone_won? || board.full?
-        clear_screen_and_display_board if human_turn?
-      end
-      display_result
-      break unless play_again?
-      reset
-      display_play_again_message
-    end
-
-    display_goodbye_message
   end
 end
 
