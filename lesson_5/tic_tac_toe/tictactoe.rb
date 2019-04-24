@@ -1,3 +1,20 @@
+module Utilities
+  def joinor(arr, delimeter=', ', join_word='or ')
+    str = ""
+    arr.each_with_index do |element, index|
+      if index == arr.size - 1
+        str << element.to_s
+      elsif index == 0 && index == arr.size - 2
+        str << "#{element} #{join_word}"
+      elsif index == arr.size - 2
+        str << "#{element}#{delimeter}#{join_word}"
+      else str << "#{element}#{delimeter}"
+      end
+    end
+    str
+  end
+end
+
 class Board
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # columns
@@ -8,6 +25,7 @@ class Board
     reset
   end
 
+  # rubocop: disable Metrics/AbcSize
   def draw
     puts "     |     |"
     puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
@@ -21,6 +39,7 @@ class Board
     puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
     puts "     |     |"
   end
+  # rubocop:enable Metrics/AbcSize
 
   def []=(num, marker)
     @squares[num].marker = marker
@@ -30,7 +49,7 @@ class Board
     @squares.keys.select { |key| @squares[key].unmarked? }
   end
 
-  def full? 
+  def full?
     unmarked_keys.empty?
   end
 
@@ -58,6 +77,7 @@ class Board
   def three_identical_markers?(squares)
     markers = squares.select(&:marked?).collect(&:marker)
     return false if markers.size != 3
+
     markers.min == markers.max
   end
 end
@@ -95,6 +115,8 @@ end
 # orchestration engine
 
 class TTTGame
+  include Utilities
+
   HUMAN_MARKER = "X"
   COMPUTER_MARKER = "O"
   FIRST_TO_MOVE = HUMAN_MARKER
@@ -107,6 +129,7 @@ class TTTGame
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
     @current_marker = FIRST_TO_MOVE
+    @score = { human: 0, computer: 0 }
   end
 
   def play
@@ -119,10 +142,14 @@ class TTTGame
       loop do
         current_player_moves
         break if board.someone_won? || board.full?
+
         clear_screen_and_display_board if human_turn?
       end
       display_result
+      update_score
+      display_score
       break unless play_again?
+
       reset
       display_play_again_message
     end
@@ -172,7 +199,7 @@ class TTTGame
   end
 
   def human_moves
-    puts "Choose a square (#{board.unmarked_keys.join(', ')}): "
+    puts "Choose a square (#{joinor(board.unmarked_keys)}): "
     square = nil
     loop do
       square = gets.chomp.to_i
@@ -180,7 +207,7 @@ class TTTGame
 
       puts "Sorry, that's not a valid choice."
     end
-    
+
     board[square] = human.marker
   end
 
@@ -201,12 +228,26 @@ class TTTGame
     end
   end
 
+  def update_score
+    case board.winning_marker
+    when human.marker
+      @score[:human] += 1
+    when computer.marker
+      @score[:computer] += 1
+    end
+  end
+
+  def display_score
+    puts "Score: You: #{@score[:human]}, Computer: #{@score[:computer]}"
+  end
+
   def play_again?
     answer = nil
     loop do
       puts "Would you like to play again? (y/n)"
       answer = gets.chomp
       break if %w(y n).include? answer
+
       puts "Sorry, you must enter y or n."
     end
 
