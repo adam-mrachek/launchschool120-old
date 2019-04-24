@@ -53,7 +53,7 @@ class Board
     unmarked_keys.empty?
   end
 
-  def someone_won?
+  def someone_won_round?
     !!winning_marker
   end
 
@@ -120,6 +120,7 @@ class TTTGame
   HUMAN_MARKER = "X"
   COMPUTER_MARKER = "O"
   FIRST_TO_MOVE = HUMAN_MARKER
+  WINNING_SCORE = 5
 
   attr_reader :board, :human, :computer
   attr_accessor :current_player
@@ -137,23 +138,33 @@ class TTTGame
     display_welcome_message
 
     loop do
-      display_board
 
       loop do
-        current_player_moves
-        break if board.someone_won? || board.full?
+        display_board
 
-        clear_screen_and_display_board if human_turn?
+        loop do
+          current_player_moves
+          break if board.someone_won_round? || board.full?
+
+          clear_screen_and_display_board if human_turn?
+        end
+
+        display_result
+        update_score
+        display_score
+        break if someone_won_game?
+        puts "Press enter to start next round."
+        gets.chomp
+
+        reset_board
       end
-      display_result
-      update_score
-      display_score
+      
+      display_game_winner
       break unless play_again?
 
-      reset
+      reset_game
       display_play_again_message
     end
-
     display_goodbye_message
   end
 
@@ -165,6 +176,7 @@ class TTTGame
 
   def display_welcome_message
     puts "Welcome to Tic Tac Toe!"
+    puts "First player to #{WINNING_SCORE} wins the game!"
     puts ""
   end
 
@@ -237,6 +249,18 @@ class TTTGame
     end
   end
 
+  def someone_won_game?
+    @score[:human] == WINNING_SCORE || @score[:computer] == WINNING_SCORE
+  end
+
+  def display_game_winner
+    if @score[:human] == WINNING_SCORE
+      puts "You won the game!"
+    elsif @score[:computer] == WINNING_SCORE
+      puts "Computer won the game!"
+    end
+  end
+
   def display_score
     puts "Score: You: #{@score[:human]}, Computer: #{@score[:computer]}"
   end
@@ -254,10 +278,16 @@ class TTTGame
     answer == 'y'
   end
 
-  def reset
+  def reset_board
     board.reset
     clear
     @current_marker = FIRST_TO_MOVE
+  end
+
+  def reset_game
+    @score[:human] = 0
+    @score[:computer] = 0
+    reset_board
   end
 
   def display_play_again_message
