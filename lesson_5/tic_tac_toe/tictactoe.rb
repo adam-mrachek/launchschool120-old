@@ -1,17 +1,13 @@
 module Utilities
-  def joinor(arr, delimeter=', ', join_word='or ')
-    str = ""
-    arr.each_with_index do |element, index|
-      if index == arr.size - 1
-        str << element.to_s
-      elsif index == 0 && index == arr.size - 2
-        str << "#{element} #{join_word}"
-      elsif index == arr.size - 2
-        str << "#{element}#{delimeter}#{join_word}"
-      else str << "#{element}#{delimeter}"
-      end
+  def joinor(arr, delimeter=', ', join_word='or')
+    case arr.size
+    when 0 then ''
+    when 1 then arr.first
+    when 2 then "#{arr.first} #{join_word} #{arr.last}"
+    else 
+      arr[-1] = "#{join_word} #{arr.last}"
+      arr.join(delimeter)
     end
-    str
   end
 end
 
@@ -153,8 +149,7 @@ class TTTGame
         update_score
         display_score
         break if someone_won_game?
-        puts "Press enter to start next round."
-        gets.chomp
+        start_next_round_prompt
 
         reset_board
       end
@@ -263,6 +258,11 @@ class TTTGame
 
   def display_score
     puts "Score: You: #{@score[:human]}, Computer: #{@score[:computer]}"
+  end
+
+  def start_next_round_prompt
+    puts "Press enter to start next round."
+    gets.chomp
   end
 
   def play_again?
