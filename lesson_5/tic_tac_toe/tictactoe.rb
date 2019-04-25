@@ -1,3 +1,5 @@
+require 'pry'
+
 module Utilities
   def joinor(arr, delimeter=', ', join_word='or')
     case arr.size
@@ -68,7 +70,27 @@ class Board
     (1..9).each { |key| @squares[key] = Square.new }
   end
 
+  def at_risk_square
+    unmarked_square = nil
+    WINNING_LINES.each do |line|
+      squares = @squares.values_at(*line)
+      if threatened_row?(squares)
+        line.each do |square|
+          if @squares[square].unmarked?
+            unmarked_square = square
+          end
+        end
+      end
+    end
+    unmarked_square
+  end
+
   private
+
+  def threatened_row?(squares)
+    squares.select(&:marked?).collect(&:marker).uniq.size == 1 && squares.select(&:unmarked?).size == 1
+  end
+
 
   def three_identical_markers?(squares)
     markers = squares.select(&:marked?).collect(&:marker)
@@ -219,7 +241,11 @@ class TTTGame
   end
 
   def computer_moves
-    board[board.unmarked_keys.sample] = computer.marker
+    if board.at_risk_square
+      board[board.at_risk_square] = computer.marker
+    else
+      board[board.unmarked_keys.sample] = computer.marker
+    end
   end
 
   def display_result
