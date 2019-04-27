@@ -159,6 +159,7 @@ class TTTGame
   def play
     clear
     display_welcome_message
+    set_first_player
 
     loop do
 
@@ -200,6 +201,30 @@ class TTTGame
     puts "Welcome to Tic Tac Toe!"
     puts "First player to #{WINNING_SCORE} wins the game!"
     puts ""
+  end
+
+  def set_first_player
+    if FIRST_TO_MOVE == 'choose'
+      choose_first_player
+    else
+      current_marker = FIRST_TO_MOVE
+    end
+  end
+
+  def choose_first_player
+    puts "Who should go first this game? ('h' for human, 'c' for computer)"
+    choice = nil
+    loop do
+      choice = gets.chomp.downcase
+      break if %w(h c).include?(choice)
+
+      puts "Sorry, that's not a choice. Please enter 'c' or 'h'."
+    end
+
+    case choice
+    when 'c' then current_marker = COMPUTER_MARKER
+    when 'h' then current_marker = HUMAN_MARKER
+    end
   end
 
   def display_goodbye_message
