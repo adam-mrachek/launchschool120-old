@@ -70,11 +70,12 @@ class Board
     (1..9).each { |key| @squares[key] = Square.new }
   end
 
-  def at_risk_square
+  # return at risk square or nil
+  def at_risk_square(marker)
     unmarked_square = nil
     WINNING_LINES.each do |line|
       squares = @squares.values_at(*line)
-      if threatened_row?(squares)
+      if threatened_row?(squares, marker)
         line.each do |square|
           if @squares[square].unmarked?
             unmarked_square = square
@@ -85,10 +86,14 @@ class Board
     unmarked_square
   end
 
+  def five_square_open?
+    @squares[5].unmarked?
+  end
+
   private
 
-  def threatened_row?(squares)
-    squares.select(&:marked?).collect(&:marker).uniq.size == 1 && squares.select(&:unmarked?).size == 1
+  def threatened_row?(squares, player_marker)
+    squares.select{|square| square.marker == player_marker}.count == 2 && squares.select(&:unmarked?).size == 1
   end
 
 
@@ -241,8 +246,12 @@ class TTTGame
   end
 
   def computer_moves
-    if board.at_risk_square
-      board[board.at_risk_square] = computer.marker
+    if board.at_risk_square(COMPUTER_MARKER)
+      board[board.at_risk_square(COMPUTER_MARKER)] = computer.marker
+    elsif board.at_risk_square(HUMAN_MARKER)
+      board[board.at_risk_square(HUMAN_MARKER)] = computer.marker
+    elsif board.five_square_open?
+      board[5] = computer.marker
     else
       board[board.unmarked_keys.sample] = computer.marker
     end
