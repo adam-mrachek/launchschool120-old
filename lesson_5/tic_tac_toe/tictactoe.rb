@@ -6,7 +6,7 @@ module Utilities
     when 0 then ''
     when 1 then arr.first
     when 2 then "#{arr.first} #{join_word} #{arr.last}"
-    else 
+    else
       arr[-1] = "#{join_word} #{arr.last}"
       arr.join(delimeter)
     end
@@ -93,9 +93,9 @@ class Board
   private
 
   def threatened_row?(squares, player_marker)
-    squares.select{|square| square.marker == player_marker}.count == 2 && squares.select(&:unmarked?).size == 1
+    squares.select { |square| square.marker == player_marker }.count == 2 &&
+      squares.select(&:unmarked?).size == 1
   end
-
 
   def three_identical_markers?(squares)
     markers = squares.select(&:marked?).collect(&:marker)
@@ -129,9 +129,11 @@ end
 
 class Player
   attr_reader :marker
+  attr_accessor :name
 
-  def initialize(marker)
+  def initialize(marker, name)
     @marker = marker
+    @name = name
   end
 end
 
@@ -155,18 +157,18 @@ class TTTGame
     choose_marker
     @first_to_move = 'choose'
     @current_marker = @first_to_move
-    @human = Player.new(@human_marker)
-    @computer = Player.new(@computer_marker)
+    @human = Player.new(@human_marker, "Player")
+    @computer = Player.new(@computer_marker, "Computer")
     @score = { human: 0, computer: 0 }
   end
 
   def play
     clear
     display_welcome_message
+    choose_player_names
     set_first_player
 
     loop do
-
       loop do
         display_board
         loop do
@@ -180,11 +182,12 @@ class TTTGame
         update_score
         display_score
         break if someone_won_game?
-        start_next_round_prompt
+
+        display_next_round_prompt
 
         reset_board
       end
-      
+
       display_game_winner
       break unless play_again?
 
@@ -193,6 +196,8 @@ class TTTGame
     end
     display_goodbye_message
   end
+
+  private
 
   def choose_marker
     puts "Which marker would you like to use? (Enter 'x' for X or 'o' for O)"
@@ -214,7 +219,22 @@ class TTTGame
     end
   end
 
-  private
+  def choose_player_names
+    choose_human_name
+    choose_computer_name
+  end
+
+  def choose_human_name
+    puts "Type your name and hit enter. (or just hit enter to use default)"
+    input = gets.chomp
+    human.name = input if !input.empty?
+  end
+
+  def choose_computer_name
+    puts "Type computer's name and hit enter. (or hit enter to use default)"
+    input = gets.chomp
+    computer.name = input if !input.empty?
+  end
 
   def clear
     system('clear') || system('cls')
@@ -255,7 +275,7 @@ class TTTGame
   end
 
   def display_board
-    puts "You're a #{human.marker}. Computer is a #{computer.marker}."
+    puts "#{human.name} a #{human.marker}. #{computer.name} is a #{computer.marker}."
     puts ""
     board.draw
     puts ""
@@ -310,9 +330,9 @@ class TTTGame
 
     case board.winning_marker
     when human.marker
-      puts "You won!"
+      puts "#{human.name} won!"
     when computer.marker
-      puts "Computer won!"
+      puts "#{computer.name} won!"
     else
       puts "It's a tie!"
     end
@@ -335,15 +355,17 @@ class TTTGame
     if @score[:human] == WINNING_SCORE
       puts "You won the game!"
     elsif @score[:computer] == WINNING_SCORE
-      puts "Computer won the game!"
+      puts "#{computer.name} won the game!"
     end
   end
 
   def display_score
-    puts "Score: You: #{@score[:human]}, Computer: #{@score[:computer]}"
+    puts "SCORE:"
+    puts "#{human.name}: #{@score[:human]}"
+    puts "#{computer.name} #{@score[:computer]}"
   end
 
-  def start_next_round_prompt
+  def display_next_round_prompt
     puts "Press enter to start next round."
     gets.chomp
   end
