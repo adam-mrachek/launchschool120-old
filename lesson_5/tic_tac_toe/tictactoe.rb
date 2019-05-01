@@ -195,14 +195,14 @@ class TTTGame
   include Displayable
 
   WINNING_SCORE = 2
+  FIRST_TO_MOVE = 'choose'
   GAME_NAME = 'Tic Tac Toe'
 
   attr_reader :board, :human, :computer
 
   def initialize
     @board = Board.new
-    @first_to_move = 'choose'
-    @current_marker = @first_to_move
+    @current_marker = FIRST_TO_MOVE
     @human = Player.new('X')
     @computer = Player.new('O')
     @score = { human: 0, computer: 0 }
@@ -210,25 +210,16 @@ class TTTGame
 
   def play
     display_welcome_message(GAME_NAME, WINNING_SCORE)
-    choose_player_names
-    choose_marker
-    set_first_player
+    choose_game_conditions
 
     loop do
       loop do
         display_board
-        loop do
-          current_player_moves
-          break if board.someone_won_round? || board.full?
-
-          clear_screen_and_display_board if human_turn?
-        end
-
+        player_move_gameplay
         update_score_and_display_result
         break if someone_won_game?
 
         display_next_round_prompt
-
         reset_board
       end
 
@@ -242,6 +233,12 @@ class TTTGame
   end
 
   private
+
+  def choose_game_conditions
+    choose_player_names
+    choose_marker
+    set_first_player
+  end
 
   def choose_marker
     puts "Which marker would you like to use? (Enter 'x' for X or 'o' for O)"
@@ -282,10 +279,10 @@ class TTTGame
   end
 
   def set_first_player
-    if @first_to_move == 'choose'
+    if FIRST_TO_MOVE == 'choose'
       choose_first_player
     else
-      @current_marker = @first_to_move
+      @current_marker = FIRST_TO_MOVE
     end
   end
 
@@ -302,6 +299,15 @@ class TTTGame
     case choice
     when 'c' then @current_marker = computer.marker
     when 'h' then @current_marker = human.marker
+    end
+  end
+
+  def player_move_gameplay
+    loop do
+      current_player_moves
+      break if board.someone_won_round? || board.full?
+
+      clear_screen_and_display_board if human_turn?
     end
   end
 
