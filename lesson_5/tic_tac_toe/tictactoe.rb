@@ -11,6 +11,58 @@ module Utilities
       arr.join(delimeter)
     end
   end
+
+  def empty_line
+    puts ""
+  end
+
+  def clear
+    system('clear') || system('cls')
+  end
+
+  def horizontal_rule
+    puts "---------------------"
+  end
+end
+
+module Displayable
+  def display_welcome_message(game_name, winning_score)
+    clear
+    empty_line
+    puts "Welcome to #{game_name}!"
+    empty_line
+    puts "*First player to #{winning_score} wins the game!*"
+    empty_line
+  end
+
+  def display_goodbye_message(game_name)
+    puts "Thanks for playing #{game_name}! Goodbye!"
+  end
+
+  def display_play_again_message
+    puts "Let's play again!"
+    empty_line
+  end
+
+  def display_choose_name
+    horizontal_rule
+    puts "Please enter a name:"
+    puts "Must be between 1 and 10 characters"
+    puts "Numbers and letters only"
+    horizontal_rule
+  end
+
+  def display_choose_first_player
+    puts "Who should go first this game? ('h' for human, 'c' for computer)"
+  end
+
+  def display_invalid_name
+    puts "Sorry, that's an invalid name."
+  end
+
+  def display_invalid_choice
+    puts "Sorry, that's not a valid choice."
+  end
 end
 
 class Board
@@ -131,7 +183,7 @@ class Player
   attr_reader :marker
   attr_accessor :name
 
-  def initialize(marker, name)
+  def initialize(marker, name = ' ')
     @marker = marker
     @name = name
   end
@@ -141,11 +193,10 @@ end
 
 class TTTGame
   include Utilities
+  include Displayable
 
-  # HUMAN_MARKER = "X"
-  # COMPUTER_MARKER = "O"
-  # FIRST_TO_MOVE = @human_marker
   WINNING_SCORE = 2
+  GAME_NAME = 'Tic Tac Toe'
 
   attr_reader :board, :human, :computer
   attr_accessor :current_player, :human_marker, :computer_marker
@@ -157,14 +208,13 @@ class TTTGame
     choose_marker
     @first_to_move = 'choose'
     @current_marker = @first_to_move
-    @human = Player.new(@human_marker, "Player")
-    @computer = Player.new(@computer_marker, "Computer")
+    @human = Player.new(@human_marker)
+    @computer = Player.new(@computer_marker)
     @score = { human: 0, computer: 0 }
   end
 
   def play
-    clear
-    display_welcome_message
+    display_welcome_message(GAME_NAME, WINNING_SCORE)
     choose_player_names
     set_first_player
 
@@ -178,9 +228,7 @@ class TTTGame
           clear_screen_and_display_board if human_turn?
         end
 
-        display_result
-        update_score
-        display_score
+        update_score_and_display_result
         break if someone_won_game?
 
         display_next_round_prompt
@@ -194,7 +242,7 @@ class TTTGame
       reset_game
       display_play_again_message
     end
-    display_goodbye_message
+    display_goodbye_message(GAME_NAME)
   end
 
   private
@@ -225,25 +273,19 @@ class TTTGame
   end
 
   def choose_human_name
-    puts "Type your name and hit enter. (or just hit enter to use default)"
-    input = gets.chomp
+    input = ''
+    loop do
+      display_choose_name
+      input = gets.chomp
+      break unless input.empty? || input =~ /[^A-Za-z0-9]/
+
+      display_invalid_name
+    end
     human.name = input if !input.empty?
   end
 
   def choose_computer_name
-    puts "Type computer's name and hit enter. (or hit enter to use default)"
-    input = gets.chomp
-    computer.name = input if !input.empty?
-  end
-
-  def clear
-    system('clear') || system('cls')
-  end
-
-  def display_welcome_message
-    puts "Welcome to Tic Tac Toe!"
-    puts "First player to #{WINNING_SCORE} wins the game!"
-    puts ""
+    computer.name = ['R2D2', 'Number 5', 'C3PO', 'T1000', 'Bender'].sample
   end
 
   def set_first_player
@@ -255,13 +297,13 @@ class TTTGame
   end
 
   def choose_first_player
-    puts "Who should go first this game? ('h' for human, 'c' for computer)"
     choice = nil
     loop do
+      display_choose_first_player
       choice = gets.chomp.downcase
       break if %w(h c).include?(choice)
 
-      puts "Sorry, that's not a choice. Please enter 'c' or 'h'."
+      display_invalid_choice
     end
 
     case choice
@@ -270,15 +312,11 @@ class TTTGame
     end
   end
 
-  def display_goodbye_message
-    puts "Thanks for playing Tic Tac Toe! Goodbye!"
-  end
-
   def display_board
     puts "#{human.name} a #{human.marker}. #{computer.name} is a #{computer.marker}."
-    puts ""
+    empty_line
     board.draw
-    puts ""
+    empty_line
   end
 
   def clear_screen_and_display_board
@@ -347,6 +385,12 @@ class TTTGame
     end
   end
 
+  def update_score_and_display_result
+    update_score
+    display_result
+    display_score
+  end
+
   def someone_won_game?
     @score[:human] == WINNING_SCORE || @score[:computer] == WINNING_SCORE
   end
@@ -360,9 +404,11 @@ class TTTGame
   end
 
   def display_score
+    horizontal_rule
     puts "SCORE:"
     puts "#{human.name}: #{@score[:human]}"
     puts "#{computer.name} #{@score[:computer]}"
+    horizontal_rule
   end
 
   def display_next_round_prompt
@@ -394,13 +440,7 @@ class TTTGame
     @score[:computer] = 0
     reset_board
   end
-
-  def display_play_again_message
-    puts "Let's play again!"
-    puts ""
-  end
 end
 
-# game is started like this
 game = TTTGame.new
 game.play
