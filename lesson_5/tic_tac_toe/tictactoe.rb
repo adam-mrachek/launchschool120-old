@@ -1,5 +1,3 @@
-require 'pry'
-
 module Utilities
   def joinor(arr, delimeter=', ', join_word='or')
     case arr.size
@@ -213,22 +211,19 @@ class TTTGame
     choose_game_conditions
 
     loop do
-      loop do
-        display_board
-        player_move_gameplay
-        update_score_and_display_result
-        break if someone_won_game?
+      display_board
+      player_move_gameplay
+      update_score_and_display_result
 
+      if someone_won_game?
+        display_game_winner
+        play_again? ? reset_game_play_again_message : break
+      else
         display_next_round_prompt
         reset_board
       end
-
-      display_game_winner
-      break unless play_again?
-
-      reset_game
-      display_play_again_message
     end
+
     display_goodbye_message(GAME_NAME)
   end
 
@@ -443,6 +438,11 @@ class TTTGame
     end
 
     answer == 'y'
+  end
+
+  def reset_game_play_again_message
+    reset_game
+    display_play_again_message
   end
 
   def reset_board
