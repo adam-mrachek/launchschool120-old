@@ -68,6 +68,8 @@ class Board
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # columns
                   [[1, 5, 9], [3, 5, 7]]              # diagonals
 
+  attr_reader :squares                
+
   def initialize
     @squares = {}
     reset
@@ -201,11 +203,52 @@ class Human < Player
     end
     @name = input if !input.empty?
   end
+
+  def move(board)
+    puts "Choose a square (#{joinor(board.unmarked_keys)}): "
+    square = nil
+    loop do
+      square = gets.chomp.to_i
+      break if board.unmarked_keys.include?(square)
+
+      display_invalid_choice
+    end
+
+    board[square] = @marker
+  end
 end
 
 class Computer < Player
   def choose_name
     @name = ['R2D2', 'Number 5', 'C3PO', 'T1000', 'Bender'].sample
+  end
+
+  def move(board, human)
+    if board.at_risk_square(@marker)
+      attack_at_risk_square(board)
+    elsif board.at_risk_square(human.marker)
+      defend_at_risk_square(board, human)
+    elsif board.five_square_open?
+      choose_middle_square(board)
+    else
+      choose_random_square(board)
+    end
+  end
+
+  def attack_at_risk_square(board)
+    board[board.at_risk_square(@marker)] = @marker
+  end
+
+  def defend_at_risk_square(board, human)
+    board[board.at_risk_square(human.marker)] = @marker
+  end
+
+  def choose_middle_square(board)
+    board[5] = @marker
+  end
+
+  def choose_random_square(board)
+    board[board.unmarked_keys.sample] = @marker
   end
 end
 
@@ -332,53 +375,12 @@ class TTTGame
 
   def current_player_moves
     if human_turn?
-      human_moves
+      human.move(board)
       @current_marker = computer.marker
     else
-      computer_moves
+      computer.move(board, human)
       @current_marker = human.marker
     end
-  end
-
-  def human_moves
-    puts "Choose a square (#{joinor(board.unmarked_keys)}): "
-    square = nil
-    loop do
-      square = gets.chomp.to_i
-      break if board.unmarked_keys.include?(square)
-
-      puts "Sorry, that's not a valid choice."
-    end
-
-    board[square] = human.marker
-  end
-
-  def computer_moves
-    if board.at_risk_square(computer.marker)
-      attack_at_risk_square
-    elsif board.at_risk_square(human.marker)
-      defend_at_risk_square
-    elsif board.five_square_open?
-      choose_middle_square
-    else
-      choose_random_square
-    end
-  end
-
-  def attack_at_risk_square
-    board[board.at_risk_square(computer.marker)] = computer.marker
-  end
-
-  def defend_at_risk_square
-    board[board.at_risk_square(human.marker)] = computer.marker
-  end
-
-  def choose_middle_square
-    board[5] = computer.marker
-  end
-
-  def choose_random_square
-    board[board.unmarked_keys.sample] = computer.marker
   end
 
   def display_result
