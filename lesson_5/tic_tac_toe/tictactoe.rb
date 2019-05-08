@@ -178,11 +178,34 @@ class Square
 end
 
 class Player
+  include Displayable
+  include Utilities
+
   attr_accessor :marker, :name
 
   def initialize(marker, name = ' ')
     @marker = marker
     @name = name
+  end
+end
+
+class Human < Player
+  def choose_name
+    input = ''
+    loop do
+      display_choose_name
+      input = gets.chomp
+      break unless input.empty? || input =~ /[^A-Za-z0-9]/
+
+      display_invalid_name
+    end
+    @name = input if !input.empty?
+  end
+end
+
+class Computer < Player
+  def choose_name
+    @name = ['R2D2', 'Number 5', 'C3PO', 'T1000', 'Bender'].sample
   end
 end
 
@@ -201,8 +224,8 @@ class TTTGame
   def initialize
     @board = Board.new
     @current_marker = FIRST_TO_MOVE
-    @human = Player.new('X')
-    @computer = Player.new('O')
+    @human = Human.new('X')
+    @computer = Computer.new('O')
     @score = { human: 0, computer: 0 }
   end
 
@@ -253,24 +276,8 @@ class TTTGame
   end
 
   def choose_player_names
-    choose_human_name
-    choose_computer_name
-  end
-
-  def choose_human_name
-    input = ''
-    loop do
-      display_choose_name
-      input = gets.chomp
-      break unless input.empty? || input =~ /[^A-Za-z0-9]/
-
-      display_invalid_name
-    end
-    human.name = input if !input.empty?
-  end
-
-  def choose_computer_name
-    computer.name = ['R2D2', 'Number 5', 'C3PO', 'T1000', 'Bender'].sample
+    human.choose_name
+    computer.choose_name
   end
 
   def set_first_player
