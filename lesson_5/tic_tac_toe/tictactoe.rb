@@ -68,7 +68,7 @@ class Board
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # columns
                   [[1, 5, 9], [3, 5, 7]]              # diagonals
 
-  attr_reader :squares                
+  attr_reader :squares
 
   def initialize
     @squares = {}
