@@ -98,7 +98,7 @@ class Game
 
   def start
     deal_cards
-    # show_initial_cards
+    show_initial_cards
     # player_turn
     # dealer_turn
     # show_result
@@ -109,7 +109,51 @@ class Game
       @game_deck.deal(@player.hand)
       @game_deck.deal(@dealer.hand)
     end
-    binding.pry
+  end
+
+  def show_initial_cards
+    show_player_hand
+    show_dealer_hand
+  end
+
+  def show_player_hand
+    puts "You have #{card_values(@player.hand)} for a total of #{total(@player.hand)}."
+  end
+
+  def show_dealer_hand
+    puts "Dealer is showing #{@dealer.hand[0][1]} for a total of #{total(@dealer.hand)}."
+  end
+
+  def card_values(hand)
+    cards = ""
+    hand.each do |card|
+      if cards.empty?
+        cards << card[1]
+      else
+        cards << ", #{card[1]}"
+      end
+    end
+    cards
+  end
+
+  def total(cards)
+    sum = 0
+    values = cards.map { |card| card[1] }
+    values.each do |value|
+      if value == 'A'
+        sum += 11
+      elsif value.to_i == 0
+        sum += 10
+      else
+        sum += value.to_i
+      end
+    end
+
+    values.count('A').times do
+      sum -= 10 if sum > 21
+    end
+
+    sum
   end
 end
 
