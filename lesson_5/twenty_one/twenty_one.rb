@@ -90,6 +90,9 @@ class Card
 end
 
 class Game
+  WINNING_SCORE = 21
+  DEALER_STAY = 17
+
   def initialize
     @game_deck = Deck.new
     @player = Player.new
@@ -99,9 +102,11 @@ class Game
   def start
     deal_cards
     show_initial_cards
-    # player_turn
-    # dealer_turn
-    # show_result
+    player_turn
+    show_result if busted?(@player.hand)
+    dealer_turn
+    show_final_cards
+    show_result
   end
 
   def deal_cards
@@ -113,6 +118,11 @@ class Game
 
   def show_initial_cards
     show_player_hand
+    show_dealer_face_up_card
+  end
+
+  def show_final_cards
+    show_player_hand
     show_dealer_hand
   end
 
@@ -120,8 +130,12 @@ class Game
     puts "You have #{card_values(@player.hand)} for a total of #{total(@player.hand)}."
   end
 
+  def show_dealer_face_up_card
+    puts "Dealer is showing #{@dealer.hand[0][1]}."
+  end
+
   def show_dealer_hand
-    puts "Dealer is showing #{@dealer.hand[0][1]} for a total of #{total(@dealer.hand)}."
+    puts "Dealer is showing #{card_values(@dealer.hand)} for a total of #{total(@dealer.hand)}."
   end
 
   def card_values(hand)
@@ -155,6 +169,55 @@ class Game
 
     sum
   end
+
+  def player_turn
+    loop do
+      break if hit_or_stay? == 's'
+
+      @game_deck.deal(@player.hand)
+      show_player_hand
+      break if busted?(@player.hand)
+    end
+  end
+
+  def dealer_turn
+    while total(@dealer.hand) < DEALER_STAY
+      @game_deck.deal(@dealer.hand)
+      show_dealer_hand
+      sleep 1.5
+    end
+  end
+
+  def hit_or_stay?
+    choice = ''
+    loop do
+      puts "Would you like to (h)it or (s)tay?"
+      choice = gets.chomp.downcase
+      break if %w(h s).include?(choice)
+
+      puts "Sorry, invalid choice."
+    end
+    choice
+  end
+
+  def busted?(hand)
+    total(hand) > WINNING_SCORE
+  end
+
+  def show_result
+    if busted?(@player.hand)
+      puts "You busted! Dealer wins!"
+    elsif busted?(@dealer.hand)
+      puts "Dealer busted! You win!"
+    elsif total(@player.hand) == total(@dealer.hand)
+      puts "It's a push!"
+    elsif total(@player.hand) > total(@dealer.hand)
+      puts "You win!"
+    else
+      puts "Dealer wins!"
+    end
+  end
+
 end
 
 Game.new.start
