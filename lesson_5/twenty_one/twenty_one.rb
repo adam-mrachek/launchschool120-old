@@ -3,10 +3,15 @@ require 'pry'
 class Player
   attr_accessor :hand
 
-  def initialize
+  def initialize(name)
     # what would the 'data' or 'states' of a Player object entail?
     # maybe cards? name?
     @hand = []
+    @name = name
+  end
+
+  def show_hand
+    puts "#{@name} has #{card_values(@hand)} for a total of #{total}."
   end
 
   def hit
@@ -17,42 +22,41 @@ class Player
 
   end
 
-  def busted?
+  def busted?(winning_score)
+    total > winning_score
+  end
 
+  def card_values(hand)
+    cards = ""
+    hand.each do |card|
+      if cards.empty?
+        cards << card[1]
+      else
+        cards << ", #{card[1]}"
+      end
+    end
+    cards
   end
 
   def total
-    # definitely look like we need to know about 'cards' to produce some total
+    sum = 0
+    values = @hand.map { |card| card[1] }
+    values.each do |value|
+      if value == 'A'
+        sum += 11
+      elsif value.to_i == 0
+        sum += 10
+      else
+        sum += value.to_i
+      end
+    end
+
+    values.count('A').times do
+      sum -= 10 if sum > 21
+    end
+
+    sum
   end
-end
-
-class Dealer
-  attr_accessor :hand
-
-  def initialize
-    # seems very similar to Player...do we even need this?
-    @hand = []
-  end
-
-  def hit
-
-  end
-
-  def stay
-
-  end
-
-  def busted?
-
-  end
-
-  def total
-    # definitely look like we need to know about 'cards' to produce some total
-  end
-end
-
-class Participant
-  # what goes in here? all of the redundant behaviors from Player and Dealer?
 end
 
 class Deck
@@ -73,8 +77,6 @@ class Deck
   ]
 
   def initialize
-    # obviously, we need some data structure to keep track of cards
-    # array, hash, something else?
     @game_deck = DECK.shuffle
   end
 
@@ -95,15 +97,15 @@ class Game
 
   def initialize
     @game_deck = Deck.new
-    @player = Player.new
-    @dealer = Dealer.new
+    @player = Player.new('Adam')
+    @dealer = Player.new('Dealer')
   end
 
   def start
     deal_cards
     show_initial_cards
     player_turn
-    show_result if busted?(@player.hand)
+    show_result if @player.busted?(WINNING_SCORE)
     dealer_turn
     show_final_cards
     show_result
@@ -117,57 +119,17 @@ class Game
   end
 
   def show_initial_cards
-    show_player_hand
+    @player.show_hand
     show_dealer_face_up_card
   end
 
   def show_final_cards
-    show_player_hand
-    show_dealer_hand
-  end
-
-  def show_player_hand
-    puts "You have #{card_values(@player.hand)} for a total of #{total(@player.hand)}."
+    @player.show_hand
+    @dealer.show_hand
   end
 
   def show_dealer_face_up_card
     puts "Dealer is showing #{@dealer.hand[0][1]}."
-  end
-
-  def show_dealer_hand
-    puts "Dealer is showing #{card_values(@dealer.hand)} for a total of #{total(@dealer.hand)}."
-  end
-
-  def card_values(hand)
-    cards = ""
-    hand.each do |card|
-      if cards.empty?
-        cards << card[1]
-      else
-        cards << ", #{card[1]}"
-      end
-    end
-    cards
-  end
-
-  def total(cards)
-    sum = 0
-    values = cards.map { |card| card[1] }
-    values.each do |value|
-      if value == 'A'
-        sum += 11
-      elsif value.to_i == 0
-        sum += 10
-      else
-        sum += value.to_i
-      end
-    end
-
-    values.count('A').times do
-      sum -= 10 if sum > 21
-    end
-
-    sum
   end
 
   def player_turn
@@ -175,15 +137,15 @@ class Game
       break if hit_or_stay? == 's'
 
       @game_deck.deal(@player.hand)
-      show_player_hand
-      break if busted?(@player.hand)
+      @player.show_hand
+      break if @player.busted?(WINNING_SCORE)
     end
   end
 
   def dealer_turn
-    while total(@dealer.hand) < DEALER_STAY
+    while @dealer.total < DEALER_STAY
       @game_deck.deal(@dealer.hand)
-      show_dealer_hand
+      @dealer.show_hand
       sleep 1.5
     end
   end
@@ -200,18 +162,14 @@ class Game
     choice
   end
 
-  def busted?(hand)
-    total(hand) > WINNING_SCORE
-  end
-
   def show_result
-    if busted?(@player.hand)
+    if @player.busted?(WINNING_SCORE)
       puts "You busted! Dealer wins!"
-    elsif busted?(@dealer.hand)
+    elsif @dealer.busted?(WINNING_SCORE)
       puts "Dealer busted! You win!"
-    elsif total(@player.hand) == total(@dealer.hand)
+    elsif @player.total == @dealer.total
       puts "It's a push!"
-    elsif total(@player.hand) > total(@dealer.hand)
+    elsif @player.total > @dealer.total
       puts "You win!"
     else
       puts "Dealer wins!"
