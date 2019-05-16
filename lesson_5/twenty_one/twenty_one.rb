@@ -14,12 +14,20 @@ class Player
     puts "#{@name} has #{card_values(@hand)} for a total of #{total}."
   end
 
-  def hit
-
+  def hit(deck)
+    @hand << deck.deal
   end
 
-  def stay
+  def stay?
+    choice = ''
+    loop do
+      puts "Would you like to (h)it or (s)tay?"
+      choice = gets.chomp.downcase
+      break if %w(h s).include?(choice)
 
+      puts "Sorry, invalid choice."
+    end
+    choice == 's'
   end
 
   def busted?(winning_score)
@@ -80,8 +88,8 @@ class Deck
     @game_deck = DECK.shuffle
   end
 
-  def deal(hand)
-    hand << @game_deck.pop
+  def deal
+    @game_deck.pop
   end
 end
 
@@ -105,16 +113,15 @@ class Game
     deal_cards
     show_initial_cards
     player_turn
-    show_result if @player.busted?(WINNING_SCORE)
-    dealer_turn
+    dealer_turn unless @player.busted?(WINNING_SCORE)
     show_final_cards
     show_result
   end
 
   def deal_cards
     2.times do
-      @game_deck.deal(@player.hand)
-      @game_deck.deal(@dealer.hand)
+      @player.hand << @game_deck.deal
+      @dealer.hand << @game_deck.deal
     end
   end
 
@@ -134,32 +141,19 @@ class Game
 
   def player_turn
     loop do
-      break if hit_or_stay? == 's'
+      break if @player.busted?(WINNING_SCORE) || @player.stay?
 
-      @game_deck.deal(@player.hand)
+      @player.hit(@game_deck)
       @player.show_hand
-      break if @player.busted?(WINNING_SCORE)
     end
   end
 
   def dealer_turn
     while @dealer.total < DEALER_STAY
-      @game_deck.deal(@dealer.hand)
+      @dealer.hit(@game_deck)
       @dealer.show_hand
       sleep 1.5
     end
-  end
-
-  def hit_or_stay?
-    choice = ''
-    loop do
-      puts "Would you like to (h)it or (s)tay?"
-      choice = gets.chomp.downcase
-      break if %w(h s).include?(choice)
-
-      puts "Sorry, invalid choice."
-    end
-    choice
   end
 
   def show_result
