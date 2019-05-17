@@ -13,40 +13,9 @@ module Utilities
   end
 end
 
-class Player
-  attr_accessor :hand
-
-  def initialize(name)
-    @hand = []
-    @name = name
-  end
-
+module Hand
   def show_hand
     puts "#{@name}'s hand: #{card_values(@hand)} for a total of #{total}."
-  end
-
-  def show_face_up_card
-    puts "Dealer is showing #{@hand[0][1]}."
-  end
-
-  def hit(deck)
-    @hand << deck.deal
-  end
-
-  def stay?
-    choice = ''
-    loop do
-      puts "Would you like to (h)it or (s)tay?"
-      choice = gets.chomp.downcase
-      break if %w(h s).include?(choice)
-
-      puts "Sorry, invalid choice."
-    end
-    choice == 's'
-  end
-
-  def busted?(winning_score)
-    total > winning_score
   end
 
   # rubocop: disable Style/ConditionalAssignment
@@ -86,6 +55,61 @@ class Player
   # rubocop: enable Style/ConditionalAssignment
 end
 
+class Participant
+  include Hand
+
+  attr_accessor :hand
+
+  def initialize
+    @hand = []
+    @name = set_name
+  end
+
+  def hit(deck)
+    @hand << deck.deal
+  end
+
+  def stay?
+    choice = ''
+    loop do
+      puts "Would you like to (h)it or (s)tay?"
+      choice = gets.chomp.downcase
+      break if %w(h s).include?(choice)
+
+      puts "Sorry, invalid choice."
+    end
+    choice == 's'
+  end
+
+  def busted?
+    total > TwentyOne::WINNING_SCORE
+  end
+end
+
+class Player < Participant
+  def set_name
+    input = ''
+    loop do
+      puts "What's your name?"
+      input = gets.chomp
+      break unless input.empty? || input =~ /[^A-Za-z0-9]/
+
+      puts "Sorry, that's not a valid name."
+    end
+    input
+  end
+end
+
+class Dealer < Participant
+  def set_name
+    ['R2D2', 'Number 5', 'C3PO', 'T1000', 'Bender'].sample
+  end
+
+  def show_face_up_card
+    puts "#{@name} is showing #{@hand[0][1]}."
+  end
+end
+
 class Deck
   DECK = [
     ['H', '2'], ['D', '2'], ['C', '2'], ['S', '2'],
@@ -112,35 +136,37 @@ class Deck
   end
 end
 
-class Game
+class TwentyOne
   include Utilities
 
   WINNING_SCORE = 21
   DEALER_STAY = 17
 
   def initialize
-    shuffle_deck_clear_hands
+    @game_deck = Deck.new
+    @player = Player.new
+    @dealer = Dealer.new
   end
 
-  def shuffle_deck_clear_hands
+  def reset
     @game_deck = Deck.new
-    @player = Player.new('Adam')
-    @dealer = Player.new('Dealer')
+    @player.hand = []
+    @dealer.hand = []
   end
 
   def start
     welcome
     loop do
       deal_cards
-      show_initial_cards
+      show_flop
       player_turn
-      dealer_turn unless @player.busted?(WINNING_SCORE)
+      dealer_turn unless @player.busted?
       sleep 1.0
       show_result
       show_final_cards
       break unless play_again?
 
-      shuffle_deck_clear_hands
+      reset
       clear
     end
   end
@@ -160,7 +186,7 @@ class Game
     end
   end
 
-  def show_initial_cards
+  def show_flop
     @player.show_hand
     @dealer.show_face_up_card
   end
@@ -173,7 +199,7 @@ class Game
 
   def player_turn
     loop do
-      break if @player.busted?(WINNING_SCORE) || @player.stay?
+      break if @player.busted? || @player.stay?
 
       @player.hit(@game_deck)
       @player.show_hand
@@ -195,9 +221,9 @@ class Game
 
   def show_result
     horizontal_rule
-    if @player.busted?(WINNING_SCORE)
+    if @player.busted?
       puts "You busted! Dealer wins!"
-    elsif @dealer.busted?(WINNING_SCORE)
+    elsif @dealer.busted?
       puts "Dealer busted! You win!"
     elsif @player.total == @dealer.total
       puts "It's a push!"
@@ -221,4 +247,4 @@ class Game
   end
 end
 
-Game.new.start
+TwentyOne.new.start
