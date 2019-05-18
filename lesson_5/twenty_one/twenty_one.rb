@@ -13,9 +13,50 @@ module Utilities
   end
 end
 
+module Displayable
+  def display_welcome_message
+    clear
+    puts "Welcome to 21!"
+    empty_line
+    puts "The player with the highest score "\
+         "without going over #{TwentyOne::WINNING_SCORE} wins!"
+    horizontal_rule
+  end
+
+  def display_choose_name
+    clear
+    horizontal_rule
+    puts "Please enter a name:"
+    puts "Must be between 1 and 10 characters"
+    puts "Numbers and letters only"
+    horizontal_rule
+  end
+
+  def display_invalid_input
+    puts "Sorry, that's an invalid input."
+  end
+
+  def display_play_again_prompt
+    puts "Would you like to play again? (y or n)"
+  end
+
+  def display_you_busted_message
+    puts "You busted! Dealer wins!"
+  end
+
+  def display_dealer_busted_message
+    puts "Dealer busted! You win!"
+  end
+end
+
 module Hand
   def show_hand
-    puts "#{@name}'s hand: #{card_values(@hand)} for a total of #{total}."
+    puts "#{@name}'s hand: "
+    @cards.each do |card|
+      puts "==> #{card}"
+    end
+    puts "Total: #{total}"
+    empty_line
   end
 
   # rubocop: disable Style/ConditionalAssignment
@@ -35,18 +76,19 @@ module Hand
   # rubocop: disable Style/ConditionalAssignment
   def total
     sum = 0
-    values = @hand.map { |card| card[1] }
-    values.each do |value|
-      if value == 'A'
+    @cards.each do |card|
+      if card.value == 'Ace'
         sum += 11
-      elsif value.to_i == 0
+      elsif card.value.to_i == 0
         sum += 10
       else
-        sum += value.to_i
+        sum += card.value.to_i
       end
     end
 
-    values.count('A').times do
+    aces = @cards.select { |card| card.value == 'Ace'}
+
+    aces.count.times do
       sum -= 10 if sum > 21
     end
 
@@ -55,18 +97,54 @@ module Hand
   # rubocop: enable Style/ConditionalAssignment
 end
 
+class Card
+  SUITS = ['C', 'S', 'H', 'D']
+  VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
+  def initialize(value, suit)
+    @value = value
+    @suit = suit
+  end
+
+  def value
+    case @value
+    when 'J' then 'Jack'
+    when 'Q' then 'Queen'
+    when 'K' then 'King'
+    when 'A' then 'Ace'
+    else
+      @value
+    end
+  end
+
+  def suit
+    case @suit
+    when 'C' then 'Clubs'
+    when 'S' then 'Spades'
+    when 'H' then 'Hearts'
+    when 'D' then 'Diamonds'
+    end
+  end
+
+  def to_s
+    "#{value} of #{suit}"
+  end
+end
+
 class Participant
   include Hand
+  include Displayable
+  include Utilities
 
-  attr_accessor :hand
+  attr_accessor :cards
 
   def initialize
-    @hand = []
+    @cards = []
     @name = set_name
   end
 
   def hit(deck)
-    @hand << deck.deal
+    @cards << deck.deal
   end
 
   def stay?
@@ -76,7 +154,7 @@ class Participant
       choice = gets.chomp.downcase
       break if %w(h s).include?(choice)
 
-      puts "Sorry, invalid choice."
+      display_invalid_input
     end
     choice == 's'
   end
@@ -90,11 +168,11 @@ class Player < Participant
   def set_name
     input = ''
     loop do
-      puts "What's your name?"
+      display_choose_name
       input = gets.chomp
       break unless input.empty? || input =~ /[^A-Za-z0-9]/
 
-      puts "Sorry, that's not a valid name."
+      display_invalid_input
     end
     input
   end
@@ -106,23 +184,21 @@ class Dealer < Participant
   end
 
   def show_face_up_card
-    puts "#{@name} is showing #{@hand[0][1]}."
+    puts "#{@name} is showing #{@cards[0]}."
+    empty_line
   end
 end
 
 class Deck
-  SUITS = ['C', 'S', 'H', 'D']
-  VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-
   def initialize
     @cards = []
     shuffle_deck
   end
 
   def shuffle_deck
-    SUITS.each do |suit|
-      VALUES.each do |value|
-        @cards << [suit, value]
+    Card::SUITS.each do |suit|
+      Card::VALUES.each do |value|
+        @cards << Card.new(value, suit)
       end
     end
     @cards.shuffle!
@@ -135,6 +211,7 @@ end
 
 class TwentyOne
   include Utilities
+  include Displayable
 
   WINNING_SCORE = 21
   DEALER_STAY = 17
@@ -147,12 +224,12 @@ class TwentyOne
 
   def reset
     @game_deck = Deck.new
-    @player.hand = []
-    @dealer.hand = []
+    @player.cards = []
+    @dealer.cards = []
   end
 
   def start
-    welcome
+    display_welcome_message
     loop do
       deal_cards
       show_flop
@@ -168,18 +245,10 @@ class TwentyOne
     end
   end
 
-  def welcome
-    clear
-    puts "Welcome to 21!"
-    puts "The player with the highest score "\
-         "without going over #{WINNING_SCORE} wins!"
-    horizontal_rule
-  end
-
   def deal_cards
     2.times do
-      @player.hand << @game_deck.deal
-      @dealer.hand << @game_deck.deal
+      @player.cards << @game_deck.deal
+      @dealer.cards << @game_deck.deal
     end
   end
 
@@ -197,9 +266,12 @@ class TwentyOne
   def player_turn
     loop do
       break if @player.busted? || @player.stay?
-
+      clear
+      puts "**Player hits!**"
       @player.hit(@game_deck)
+      sleep 1.5
       @player.show_hand
+      @dealer.show_face_up_card
     end
   end
 
@@ -207,7 +279,7 @@ class TwentyOne
     @dealer.show_hand
     while @dealer.total < DEALER_STAY
       sleep 1.0
-      empty_line
+      clear
       puts "**Dealer hits**"
       empty_line
       @dealer.hit(@game_deck)
@@ -219,9 +291,9 @@ class TwentyOne
   def show_result
     horizontal_rule
     if @player.busted?
-      puts "You busted! Dealer wins!"
+      display_you_busted_message
     elsif @dealer.busted?
-      puts "Dealer busted! You win!"
+      display_dealer_busted_message
     elsif @player.total == @dealer.total
       puts "It's a push!"
     elsif @player.total > @dealer.total
@@ -234,11 +306,11 @@ class TwentyOne
   def play_again?
     answer = ""
     loop do
-      puts "Would you like to play again? (y or n)"
+      display_play_again_prompt
       answer = gets.chomp.downcase
       break if %w(y n).include?(answer)
 
-      puts "Sorry, invalid choice."
+      display_invalid_choice
     end
     answer == 'y'
   end
