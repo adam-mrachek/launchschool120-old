@@ -131,7 +131,7 @@ module Hand
       end
     end
 
-    aces = @cards.select { |card| card.value == 'Ace'}
+    aces = @cards.select { |card| card.value == 'Ace' }
 
     aces.count.times do
       sum -= 10 if sum > 21
@@ -313,6 +313,7 @@ class TwentyOne
   def player_turn
     loop do
       break if @player.busted? || @player.stay?
+
       clear
       display_participant_hits(@player.name)
       @player.hit(@game_deck)
