@@ -11,12 +11,16 @@ module Utilities
   def horizontal_rule
     puts "---------------------"
   end
+
+  def banner
+    puts "**********************"
+  end
 end
 
 module Displayable
   def display_welcome_message
     clear
-    puts "Welcome to 21!"
+    puts "Welcome to 21, #{@player.name}!"
     empty_line
     puts "The player with the highest score "\
          "without going over #{TwentyOne::WINNING_SCORE} wins!"
@@ -36,16 +40,57 @@ module Displayable
     puts "Sorry, that's an invalid input."
   end
 
+  def display_dealing_cards_message
+    puts "Dealing cards..."
+    empty_line
+    sleep 2.0
+  end
+
   def display_play_again_prompt
     puts "Would you like to play again? (y or n)"
   end
 
+  def display_dealer_turn_message
+    puts "#{@player.name} stays. Dealer's turn."
+    empty_line
+  end
+
   def display_you_busted_message
+    banner
     puts "You busted! Dealer wins!"
+    banner
+    empty_line
   end
 
   def display_dealer_busted_message
+    banner
     puts "Dealer busted! You win!"
+    banner
+    empty_line
+  end
+
+  def display_participant_hits(name)
+    puts "#{name} hits!"
+    empty_line
+  end
+
+  def display_push_message
+    banner
+    puts "It's a push!"
+    banner
+    empty_line
+  end
+
+  def display_winner_message(name)
+    banner
+    puts "#{name} wins the hand!"
+    banner
+    empty_line
+  end
+
+  def display_goodbye_message
+    empty_line
+    puts "Thanks for playing. Goodbye!"
   end
 end
 
@@ -136,7 +181,7 @@ class Participant
   include Displayable
   include Utilities
 
-  attr_accessor :cards
+  attr_accessor :cards, :name
 
   def initialize
     @cards = []
@@ -232,17 +277,19 @@ class TwentyOne
     display_welcome_message
     loop do
       deal_cards
+      display_dealing_cards_message
       show_flop
       player_turn
       dealer_turn unless @player.busted?
       sleep 1.0
-      show_result
       show_final_cards
+      show_result
       break unless play_again?
 
       reset
       clear
     end
+    display_goodbye_message
   end
 
   def deal_cards
@@ -258,16 +305,16 @@ class TwentyOne
   end
 
   def show_final_cards
+    clear
     @player.show_hand
     @dealer.show_hand
-    horizontal_rule
   end
 
   def player_turn
     loop do
       break if @player.busted? || @player.stay?
       clear
-      puts "**Player hits!**"
+      display_participant_hits(@player.name)
       @player.hit(@game_deck)
       sleep 1.5
       @player.show_hand
@@ -276,11 +323,12 @@ class TwentyOne
   end
 
   def dealer_turn
+    clear
+    display_dealer_turn_message
     @dealer.show_hand
     while @dealer.total < DEALER_STAY
       sleep 1.0
-      clear
-      puts "**Dealer hits**"
+      display_participant_hits(@dealer.name)
       empty_line
       @dealer.hit(@game_deck)
       sleep 1.5
@@ -289,17 +337,16 @@ class TwentyOne
   end
 
   def show_result
-    horizontal_rule
     if @player.busted?
       display_you_busted_message
     elsif @dealer.busted?
       display_dealer_busted_message
     elsif @player.total == @dealer.total
-      puts "It's a push!"
+      display_push_message
     elsif @player.total > @dealer.total
-      puts "You win!"
+      display_winner_message(@player.name)
     else
-      puts "Dealer wins!"
+      display_winner_message(@dealer.name)
     end
   end
 
