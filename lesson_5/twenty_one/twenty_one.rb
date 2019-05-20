@@ -1,4 +1,3 @@
-require 'pry'
 module Utilities
   def empty_line
     puts ""
@@ -28,7 +27,6 @@ module Displayable
   end
 
   def display_choose_name
-    clear
     horizontal_rule
     puts "Please enter a name:"
     puts "Must be between 1 and 10 characters"
@@ -104,31 +102,24 @@ module Hand
     empty_line
   end
 
-  # rubocop: disable Style/ConditionalAssignment
   def card_values(hand)
     cards = ""
     hand.each do |card|
-      if cards.empty?
-        cards << card[1]
-      else
-        cards << ", #{card[1]}"
-      end
+      cards << (card.empty? ? card[1] : ", #{card[1]}")
     end
     cards
   end
-  # rubocop: enable Style/ConditionalAssignment
 
-  # rubocop: disable Style/ConditionalAssignment
   def total
     sum = 0
     @cards.each do |card|
-      if card.value == 'Ace'
-        sum += 11
-      elsif card.value.to_i == 0
-        sum += 10
-      else
-        sum += card.value.to_i
-      end
+      sum += if card.value == 'Ace'
+               11
+             elsif card.value.to_i == 0
+               10
+             else
+               card.value.to_i
+             end
     end
 
     aces = @cards.select { |card| card.value == 'Ace' }
@@ -139,7 +130,6 @@ module Hand
 
     sum
   end
-  # rubocop: enable Style/ConditionalAssignment
 end
 
 class Card
@@ -212,10 +202,11 @@ end
 class Player < Participant
   def set_name
     input = ''
+    clear
     loop do
       display_choose_name
       input = gets.chomp
-      break unless input.empty? || input =~ /[^A-Za-z0-9]/
+      break unless input.empty? || input =~ /[^A-Za-z0-9]/ || input.size > 10
 
       display_invalid_input
     end
@@ -358,7 +349,7 @@ class TwentyOne
       answer = gets.chomp.downcase
       break if %w(y n).include?(answer)
 
-      display_invalid_choice
+      display_invalid_input
     end
     answer == 'y'
   end
